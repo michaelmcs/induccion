@@ -1,10 +1,10 @@
 <?php 
 
-    $hostname = "172.80.80.24";
+    $hostname = "localhost";
     $database = "ingresantes2025";
-    $user = "michael";
+    $user = "root";
     // $user = "vrcad";
-    $password = "michael1234";
+    $password = "";
     //    $password = "#Mn5542hg";
 
 

@@ -1,142 +1,165 @@
 <?php 
-session_start(); // Iniciar la sesión
+session_start();
 include('includes/header.php');
 include('db/conection.php'); 
 ?>
 
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registro de Asistencia</title>
-</head>
-<body>
-
 <style>
-    body, html {
-        height: 100%;
-        margin: 0;
+    .logo-container {
+        text-align: center;
+        margin-top: 10px;
     }
 
-    .bg-custom {
-        background-color: #e0f7df; /* Color verde suave */
-        min-height: 100vh;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
+    .logo-container img {
+        max-width: 100px;
     }
 
-    .container {
-        flex: 1; /* Asegura que el contenedor principal ocupe el espacio disponible */
-    }
-
-    .highlight {
+    .alert-custom {
+        font-size: 1.2rem;
         font-weight: bold;
     }
 
-    .large-text {
-        font-size: 32px;
+    .highlight-text {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #2f6627;
     }
+
+    .table th, .table td {
+        vertical-align: middle;
+    }
+
+    .alert-success {
+    background-color: rgba(29, 141, 55, 0.85) !important; /* Verde más suave con transparencia */
+    color: #ffffff !important;                            /* Letras blancas */
+    border: 2px solid #1e7e34;
+}
+
+.highlight-text {
+    font-size: 2.2rem;
+    font-weight: 900;
+    color:rgb(0, 0, 0);
+    text-shadow: 1px 1px 2px #14532d; /* Un toque de sombra para destacar */
+}
+
+
 </style>
 
-<div class="d-flex justify-content-center align-items-center bg-custom">
-    <div class="container">
-        <div class="search_container px-5">
-            <div class="container px-5">
-                <h4 class="text-center">Registro de Asistencia</h4>
-                <br>
-                <div class="container px-5">
-                    <div class="container px-5">
-                        <form class="row g-3" action="index.php" method="POST"> <!-- Cambiado a POST -->
-                            <input class="form-control" type="text" min="1" max="8" id="dni" name="query" required autofocus placeholder="Buscar DNI">
-                            <input class="btn btn-primary" type="submit" value="Buscar">
-                        </form>
-
-                        <?php
-                        if (isset($_POST["query"])) {
-                            $dnibusqueda = $_POST["query"];
-                            $estado  = '1';
-
-                            $sql = "SELECT * FROM alumnos a INNER JOIN program p ON a.id_progariel = p.prog_id WHERE dni = $dnibusqueda";
-                            $result = mysqli_query($conn, $sql);
-
-                            if (mysqli_num_rows($result) > 0) {
-                                $row = mysqli_fetch_assoc($result);
-
-                                // Verificar si el estudiante ya está registrado
-                                $query = mysqli_query($conn, "SELECT * FROM asistencia WHERE dni = '$dnibusqueda'") or die(mysqli_error($conn));
-                                $count = mysqli_num_rows($query);
-
-                                if ($count > 0) {
-                                    // Estudiante ya registrado
-                                    $_SESSION['color'] = "yellow";
-                                    $_SESSION['mensaje'] = "INGRESANTE YA SE ENCUENTRA REGISTRADO";
-                                } else {
-                                    // Registrar asistencia
-                                    mysqli_query($conn, "INSERT INTO asistencia(dni,estado,fecharegistro) VALUES('$dnibusqueda','$estado',CURRENT_TIMESTAMP())") or die(mysqli_error($conn));
-                                    $_SESSION['color'] = "green";
-                                    $_SESSION['mensaje'] = "ASISTENCIA REGISTRADA CON ÉXITO";
-                                }
-
-                                // Guardar los detalles en la sesión
-                                $_SESSION['mesa'] = $row["mesa"];
-                                $_SESSION['id_firma'] = $row["id_firma"];
-                                $_SESSION['dni'] = $row["dni"];
-                                $_SESSION['nombres'] = $row["nombres"] . " " . $row["paterno"] . " " . $row["materno"];
-                                $_SESSION['programa'] = $row["programa"]; // Asignar el programa a la sesión
-                            } else {
-                                // No se encontró el DNI
-                                $_SESSION['color'] = "red";
-                                $_SESSION['mensaje'] = "NO PERTENECE A INGRESANTE 2024-II";
-                            }
-
-                            // Después de procesar la búsqueda, redireccionar para limpiar la URL
-                            header("Location: index.php");
-                            exit();
-                        }
-
-                        // Mostrar el cuadro si hay datos en la sesión
-                        if (isset($_SESSION['mensaje'])) {
-                            echo "<div class='alert' style='background-color: {$_SESSION['color']}; color: black; padding: 10px; border: 1px solid black; margin-bottom: 10px;'>";
-                            echo "<p>{$_SESSION['mensaje']}</p>";
-                            if ($_SESSION['color'] !== 'red') {
-                                echo "<p class='large-text'>Mesa: <span class='highlight'>{$_SESSION['mesa']}</span> NUMERO: <span class='highlight'>{$_SESSION['id_firma']}</span></p>";
-                                echo "<p>DNI: <span class='highlight'>{$_SESSION['dni']}</span></p>";
-                                echo "<p>NOMBRES: <span class='highlight'>{$_SESSION['nombres']}</span></p>";
-                                echo "<p>PROGRAMA: <span class='highlight'>{$_SESSION['programa']}</span></p>";
-                            }
-                            echo "</div>";
-
-                            // Limpiar la sesión después de mostrar los datos
-                            session_unset();
-                        }
-                        ?>
-                        
-                        <div class="img-center">
-                            <img src="assets/media/vracad_preview.png" alt="" class="img-fluid">
-                        </div>
-
-                    </div>
-                </div>
-            </div>
-        </div>
+<div class="container my-3">
+    <div class="logo-container">
+        <img src="assets/media/vracad_preview.png" alt="Logo">
     </div>
+
+    <h3 class="text-center mt-3 mb-4">Registro de Asistencia</h3>
+
+    <!-- FORMULARIO -->
+    <form class="row g-3 justify-content-center mb-4" action="index.php" method="POST">
+        <div class="col-md-6">
+            <input class="form-control form-control-lg" type="text" id="dni" name="query" maxlength="8" required autofocus placeholder="Ingrese DNI del ingresante">
+        </div>
+        <div class="col-md-2">
+            <button class="btn btn-primary btn-lg w-100" type="submit">Buscar</button>
+        </div>
+    </form>
+
+    <?php
+    if (isset($_POST["query"])) {
+        $dnibusqueda = $_POST["query"];
+        $estado = 1;
+
+        $sql = "SELECT * FROM alumnos a INNER JOIN program p ON a.id_progariel = p.prog_id WHERE dni = '$dnibusqueda'";
+        $result = mysqli_query($conn, $sql);
+
+        if (mysqli_num_rows($result) > 0) {
+            $row = mysqli_fetch_assoc($result);
+            $check = mysqli_query($conn, "SELECT * FROM asistencia WHERE dni = '$dnibusqueda'");
+            $count = mysqli_num_rows($check);
+
+            if ($count > 0) {
+                $_SESSION['color'] = "warning";
+                $_SESSION['mensaje'] = "⚠️ INGRESANTE YA REGISTRADO";
+            } else {
+                mysqli_query($conn, "INSERT INTO asistencia(dni,estado,fecharegistro) VALUES('$dnibusqueda','$estado',CURRENT_TIMESTAMP())");
+                $_SESSION['color'] = "success";
+                $_SESSION['mensaje'] = "✅ ASISTENCIA REGISTRADA CON ÉXITO";
+            }
+
+            $_SESSION['mesa'] = $row["mesa"];
+            $_SESSION['id_firma'] = $row["id_firma"];
+            $_SESSION['dni'] = $row["dni"];
+            $_SESSION['nombres'] = "{$row["paterno"]} {$row["materno"]} {$row["nombres"]}";
+            $_SESSION['programa'] = $row["programa"];
+        } else {
+            $_SESSION['color'] = "danger";
+            $_SESSION['mensaje'] = "❌ NO ES INGRESANTE DEL 2025-I";
+        }
+
+        header("Location: index.php");
+        exit();
+    }
+
+    if (isset($_SESSION['mensaje'])) {
+        echo "<div class='alert alert-{$_SESSION['color']} alert-custom text-center'>";
+        echo $_SESSION['mensaje'];
+
+        if ($_SESSION['color'] !== 'danger') {
+            echo "<p class='highlight-text my-3'>Mesa: <strong>{$_SESSION['mesa']}</strong> &nbsp;&nbsp; N°: <strong>{$_SESSION['id_firma']}</strong></p>";
+            
+       
+            echo "<p><strong style='color:#333;'>Nombres:</strong> <span style='font-weight: 600;'>{$_SESSION['nombres']}</span></p>";
+            echo "<p><strong style='color:#333;'>Programa:</strong> <span style='font-weight: 600;'>{$_SESSION['programa']}</span></p>";
+            echo "<p><strong style='color:#333;'>DNI:</strong> <span style='font-weight: 600;'>{$_SESSION['dni']}</span></p>";
+
+            
+        }
+
+        echo "</div>";
+        session_unset();
+    }
+
+    // Últimos ingresos
+    $ultimos = mysqli_query($conn, "SELECT a.dni, a.fecharegistro, al.paterno, al.materno, al.nombres, al.mesa, al.id_firma, al.programa 
+                                    FROM asistencia a 
+                                    JOIN alumnos al ON a.dni = al.dni 
+                                    ORDER BY a.fecharegistro DESC LIMIT 5");
+
+    if (mysqli_num_rows($ultimos) > 0) {
+        echo "<div class='mt-5'>";
+        echo "<h5 class='text-center'><i class='bi bi-clock'></i> Últimos Ingresos</h5>";
+        echo "<table class='table table-bordered table-hover text-center'>";
+        echo "<thead class='table-light'><tr>
+                <th>#</th>
+                <th>DNI</th>
+                <th>Nombre</th>
+                <th>Mesa</th>
+                <th>N°</th>
+                <th>Programa</th>
+                <th>Hora</th>
+              </tr></thead><tbody>";
+        $n = 1;
+        while ($row = mysqli_fetch_assoc($ultimos)) {
+            echo "<tr>
+                    <td>$n</td>
+                    <td>{$row['dni']}</td>
+                    <td>{$row['paterno']} {$row['materno']} {$row['nombres']}</td>
+                    <td>{$row['mesa']}</td>
+                    <td>{$row['id_firma']}</td>
+                    <td>{$row['programa']}</td>
+                    <td>" . date('H:i:s', strtotime($row['fecharegistro'])) . "</td>
+                </tr>";
+            $n++;
+        }
+        echo "</tbody></table></div>";
+    }
+    ?>
 </div>
 
 <script>
-    var input = document.getElementById('dni');
-    input.addEventListener('input', function() {
-        if (this.value.length > 8)
-            this.value = this.value.slice(0, 8);
+    const input = document.getElementById('dni');
+    input.addEventListener('input', () => {
+        if (input.value.length > 8) input.value = input.value.slice(0, 8);
     });
-
-    // Poner el cursor automáticamente en el input al cargar la página
-    window.onload = function() {
-        input.focus();
-    }
+    window.onload = () => input.focus();
 </script>
 
-<?php include('includes/footer.php') ?>
-</body>
-</html>
+<?php include('includes/footer.php'); ?>
